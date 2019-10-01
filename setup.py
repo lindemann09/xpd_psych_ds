@@ -24,7 +24,6 @@ def readme():
         os.path.join(directory, "README.md"),
         encoding="utf8",
         mode="r",
-        errors="replace",
         ) as file:
         return file.read()
 

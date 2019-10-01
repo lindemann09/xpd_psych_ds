@@ -15,6 +15,7 @@ Oliver Lindemann (oliver@expyriment.org)
 
 Install
 -------
+
 ```
 python3 setup.py install 
 ```
@@ -22,10 +23,13 @@ python3 setup.py install
 
 Command line tool
 ------------------
+
 ```
 python3 -m xpd_to_psych_ds.cli -h
 ```
+
 or if installed correctly:
+
 ```
 xpd_to_psych_ds -h
 ```

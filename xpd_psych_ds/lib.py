@@ -13,7 +13,7 @@ if version_info.major < 3:
 
 class JSONDataDescription():
 
-    def __init__(self, json_filename="data_description.json",
+    def __init__(self, json_filename="dataset_description.json",
                  subfolder = None,
                  add_optional=True):
         """PsychDS compliant JSON Data Description File"""

@@ -95,6 +95,6 @@ def create(data_folder,
         dd.creators = creators
     dd.save()
 
-    print("\nPlease do not forget to edit the `data_descrption.json` "
+    print("\nPlease do not forget to edit the `dataset_descrption.json` "
           "file.")
 
