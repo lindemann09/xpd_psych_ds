@@ -5,6 +5,7 @@ from collections import OrderedDict
 
 from . import lib
 
+
 def create(data_folder,
            additional_data_folder=(),
            destination_folder = "psych_ds",
@@ -27,8 +28,14 @@ def create(data_folder,
 
     """
 
+    data_folder = path.abspath(data_folder)
+    destination_folder = path.abspath(destination_folder)
     DIR_RAW_DATA = path.join(destination_folder, "raw_data")
     DIR_SOURCE_DATA = path.join(DIR_RAW_DATA, "source_data")
+
+    print("XPD-Psych-DS")
+    print(" Data: {}".format(data_folder))
+    print(" Destination: {}".format(destination_folder))
 
     # folder data has to exist
     if not path.isdir(data_folder):
@@ -36,8 +43,7 @@ def create(data_folder,
 
     files = os.listdir(data_folder)
     exp_name = lib.estimated_experiment_name(files)
-    print("Experiment: {}".format(exp_name))
-    print("Destination folder: {}".format(destination_folder))
+    print(" Experiment: {}".format(exp_name))
 
     if override_existing_folder:
         try:
@@ -58,6 +64,7 @@ def create(data_folder,
 
     # copy data and converting data to tsv
     varnames = []
+    cnt = 0
     for fl in files:
         shutil.copy2(path.join(data_folder, fl),
                      path.join(DIR_SOURCE_DATA, fl),
@@ -69,9 +76,13 @@ def create(data_folder,
                               path.join(DIR_RAW_DATA,
                                         "{}{}".format(fl_name, ".tsv")))
             varnames.extend(vars)
+        cnt += 1
+    print(" Files convered: {}".format(cnt))
 
     ## copy further data
     for f_data in additional_data_folder:
+        f_data = path.abspath(f_data)
+        print(" Add. data copied: {}".format(f_data))
         dir_name = path.split(f_data)[1]
         shutil.copytree(f_data, path.join(DIR_SOURCE_DATA, dir_name))
 
@@ -83,4 +94,7 @@ def create(data_folder,
     if len(creators)>0:
         dd.creators = creators
     dd.save()
+
+    print("\nPlease do not forget to edit the `data_descrption.json` "
+          "file.")
 

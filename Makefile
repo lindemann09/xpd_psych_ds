@@ -13,4 +13,4 @@ publish:
 clean:
 		@rm -rf build \
 			dist \
-			xpd_to_psych_ds.egg-info \
+			xpd_psych_ds.egg-info \

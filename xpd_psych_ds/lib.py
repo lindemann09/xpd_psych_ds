@@ -142,7 +142,7 @@ def xpd_to_tsv(xpd_flname, tsv_flname):
 
     data, varnames, subject_info, comments = read_datafile(xpd_flname)
     with open(tsv_flname, 'w') as f:
-        writer = csv.writer(f)
+        writer = csv.writer(f, delimiter='\t')
         writer.writerow(varnames)
         writer.writerows(data)
 

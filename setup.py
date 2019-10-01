@@ -30,7 +30,7 @@ def readme():
 
 
 if __name__ == '__main__':
-    print(readme())
+
     setup(
         name = package_name,
         version=xpd_psych_ds.__version__,
@@ -40,6 +40,7 @@ if __name__ == '__main__':
         license='MIT Licence',
         url='http://expyriment.github.io/DIF',
         packages=[package_name],
+        package_data={'': ['specs/*']},
         include_package_data=True,
         setup_requires=[],
         install_requires=install_requires,
