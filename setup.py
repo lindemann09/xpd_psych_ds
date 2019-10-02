@@ -39,8 +39,8 @@ if __name__ == '__main__':
         license='MIT Licence',
         url='http://expyriment.github.io/DIF',
         packages=[package_name],
-        package_data={'': ['specs/*']},
-        include_package_data=True,
+        package_data={},
+        include_package_data=False,
         setup_requires=[],
         install_requires=install_requires,
         entry_points={

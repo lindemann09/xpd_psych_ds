@@ -6,6 +6,7 @@ import json
 import csv
 
 from .read_xpd_data import read_datafile
+from . import schema
 
 if version_info.major < 3:
     raise RuntimeError("Psych_ds requires Python 3 or larger.")
@@ -30,22 +31,7 @@ class JSONDataDescription():
             self.description = OrderedDict()
 
         self.add_optional = add_optional
-        self.desc_required = JSONDataDescription._specs(
-            "description_required.json")
-        self.desc_recommended = JSONDataDescription._specs("description_recommended.json")
-        self.desc_optional = JSONDataDescription._specs("description_optional.json")
-        self.var_required = JSONDataDescription._specs("variable_required.json")
-        self.var_recommended = JSONDataDescription._specs("variable_recommended.json")
-
         self._make_compliant()
-
-
-    @staticmethod
-    def _specs(flname):
-        """reading specs from json file"""
-        p = path.split(path.realpath(__file__))[0]
-        with open(path.join(p, "specs", flname)) as fl:
-            return json.load(fl, object_pairs_hook=OrderedDict)
 
 
     def __str__(self):
@@ -65,10 +51,10 @@ class JSONDataDescription():
         # ensures xpd_psych_ds comliant json files with all required and optional
         # fields as well as a good ordering
 
-        compliant = copy(self.desc_required)
-        compliant.update(self.desc_recommended)
+        compliant = copy(schema.required)
+        compliant.update(schema.recommended)
         if self.add_optional:
-            compliant.update(self.desc_optional)
+            compliant.update(schema.optional)
 
         while len(self.description)>0:
             x = self.description.popitem(last=False)
@@ -95,9 +81,9 @@ class JSONDataDescription():
     def variables_measured(self, variable_names):
         arr = []
         for n in variable_names:
-            d = copy(self.var_required)
+            d = copy(schema.variable_required)
             d["name"] = n
-            d.update(self.var_recommended)
+            d.update(schema.variable_recommended)
             arr.append(d)
         self.description["variableMeasured"] = arr
 
