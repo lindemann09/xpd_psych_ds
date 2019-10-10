@@ -5,3 +5,4 @@ description="Create Psych DS compliant data set from Expyriment data"
 
 from .create import create
 from .lib import JSONDataDescription, xpd_to_tsv
+from . import psych_ds_data_description
