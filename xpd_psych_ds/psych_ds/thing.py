@@ -75,7 +75,6 @@ class Thing():
 
 
     def update(self, field, value):
-
         for x in range(3):
             if field in self._info[x]:
                 self._info[x][field] = value

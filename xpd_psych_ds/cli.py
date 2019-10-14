@@ -3,7 +3,7 @@ from os import path
 import argparse
 
 from . import description, __author__, __version__
-from .create import create
+from .lib import create
 
 def run():
     parser = argparse.ArgumentParser(description=description +

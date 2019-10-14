@@ -1,104 +1,145 @@
 from sys import version_info
+import os
 from os import path
-from collections import OrderedDict
-from copy import copy
 import json
 import csv
+import shutil
+from collections import OrderedDict
+
+from . import psych_ds
 
 from .read_xpd_data import read_datafile
-from . import schema
 
 if version_info.major < 3:
     raise RuntimeError("Psych_ds requires Python 3 or larger.")
 
 
-class JSONDataDescription():
+def create(data_folder,
+           additional_data_folder=(),
+           destination_folder = "psych_ds",
+           creators = (),
+           override_existing_folder=False):
+    """Create Psych DS compliant data set from Expyriment data
 
-    def __init__(self, json_filename="dataset_description.json",
-                 subfolder = None,
-                 add_optional=True):
-        """PsychDS compliant JSON Data Description File"""
+    Parameter
+    ---------
+    data_folder : str
+        path to the folder with Expyriment (.xpd) and other data
+    additional_data_folder: str (optional)
+        path the additional data that need to be included in the source folder
+    destination_folder : str (optional, default='psych_ds')
+        path to the target folder, resulting psych_ds folder
+    creators : list of str (optional)
+        list of the names of the creators of the data
+    override_existing_folder : bool (optional, default=False)
+        set True is existing xpd_psych_ds should be delete
 
-        if subfolder is not None:
-            self.json_file = path.join(subfolder, json_filename)
-        else:
-            self.json_file = json_filename
+    """
 
+    data_folder = path.abspath(data_folder)
+    destination_folder = path.abspath(destination_folder)
+    DIR_RAW_DATA = path.join(destination_folder, "raw_data")
+    DIR_SOURCE_DATA = path.join(DIR_RAW_DATA, "source_data")
+
+    print("XPD-Psych-DS")
+    print(" Data: {}".format(data_folder))
+    print(" Destination: {}".format(destination_folder))
+
+    # folder data has to exist
+    if not path.isdir(data_folder):
+        raise RuntimeError("Can't find an Expyriment data folder {}".format(data_folder))
+
+    files = os.listdir(data_folder)
+    exp_name = estimated_experiment_name(files)
+    print(" Experiment: {}".format(exp_name))
+
+    if override_existing_folder:
         try:
-            with open(self.json_file) as fl:
-                self.description = json.load(fl, object_pairs_hook=OrderedDict)
+            shutil.rmtree(destination_folder)
         except:
-            self.description = OrderedDict()
+            pass
 
-        self.add_optional = add_optional
-        self._make_compliant()
+    # make folder
+    try:
+        os.mkdir(destination_folder)
+    except:
+        raise RuntimeError("Can't create target folder {}. ".format(
+            destination_folder) +
+                           "It probably exists already or set " 
+                           "`override_existing_folder=True' ")
 
+    os.makedirs(DIR_SOURCE_DATA)
 
-    def __str__(self):
-        """"""
+    # copy data and converting data to tsv
+    varnames = []
+    cnt = 0
+    for fl in files:
+        shutil.copy2(path.join(data_folder, fl),
+                     path.join(DIR_SOURCE_DATA, fl),
+                     follow_symlinks=True)
 
-        self._make_compliant()
-        return json.dumps(self.description, indent=2)
+        fl_name, suffix = path.splitext(fl)
+        if suffix == ".xpd":
+            vars = xpd_to_tsv(path.join(data_folder, fl),
+                              path.join(DIR_RAW_DATA,
+                                        "{}{}".format(fl_name, ".tsv")))
+            varnames.extend(vars)
+        cnt += 1
+    print(" Files convered: {}".format(cnt))
 
+    ## copy further data
+    for f_data in additional_data_folder:
+        f_data = path.abspath(f_data)
+        print(" Add. data copied: {}".format(f_data))
+        dir_name = path.split(f_data)[1]
+        shutil.copytree(f_data, path.join(DIR_SOURCE_DATA, dir_name))
 
-    def save(self):
-        """"""
+    # PsychDS JSON file
+    ds = psych_ds.DataSet(name = exp_name)
 
-        with open(self.json_file, 'w') as fl:
-            fl.write(str(self))
+    # remove duplicate varnames but remain order and make psych_ds objects
+    varnames = list(OrderedDict.fromkeys(varnames))
+    varnames = list(map(lambda x:psych_ds.Variable(name=x), varnames))
+    ds.update('variableMeasured', varnames)
 
-    def _make_compliant(self):
-        # ensures xpd_psych_ds comliant json files with all required and optional
-        # fields as well as a good ordering
+    creators = list(map(lambda x:psych_ds.Person(name=x), creators))
+    ds.add("creator", creators)
+    save_dataset_description(ds, subfolder=destination_folder)
 
-        compliant = copy(schema.required)
-        compliant.update(schema.recommended)
-        if self.add_optional:
-            compliant.update(schema.optional)
-
-        while len(self.description)>0:
-            x = self.description.popitem(last=False)
-            compliant[x[0]] = x[1]
-        self.description = compliant
-
-
-    @property
-    def creators(self):
-        return get_dict_list_values(self.description["creator"], "name")
-
-    @creators.setter
-    def creators(self, names):
-        arr = []
-        for n in names:
-            arr.append(OrderedDict([("@type", "Person"), ("name", n)]))
-        self.description["creator"] = arr
-
-    @property
-    def variables_measured(self):
-        return get_dict_list_values(self.description["creator"], "name")
-
-    @variables_measured.setter
-    def variables_measured(self, variable_names):
-        arr = []
-        for n in variable_names:
-            d = copy(schema.variable_required)
-            d["name"] = n
-            d.update(schema.variable_recommended)
-            arr.append(d)
-        self.description["variableMeasured"] = arr
+    print("\nPlease do not forget to edit the `dataset_descrption.json` "
+          "file.")
 
 
-#   helper function
-def get_dict_list_values(dict_list, key):
-    # returns the values of the key in a list of dicts
+## helper
+
+
+def save_dataset_description(data_set, json_filename="dataset_description.json",
+                 subfolder = None):
+    """ TODO """
+
+    if subfolder is not None:
+        json_file = path.join(subfolder, json_filename)
+    else:
+        json_file = json_filename
+
+    with open(json_file, 'w') as fl:
+        fl.write(str(data_set))
+
+
+def load_dataset_description(json_filename="dataset_description.json",
+                 subfolder = None):
+    """ TODO """
+
+    if subfolder is not None:
+        json_file = path.join(subfolder, json_filename)
+    else:
+        json_file = json_filename
 
     try:
-        return list(map(lambda x:x[key], dict_list))
+        with open(json_file) as fl:
+            return json.load(fl, object_pairs_hook=OrderedDict)
     except:
-        return []
-
-
-
+        return None
 
 def estimated_experiment_name(data_files):
     # estimates the experiment from list of data_files
@@ -134,8 +175,6 @@ def xpd_to_tsv(xpd_flname, tsv_flname):
 
     return varnames
 
-
-# helper function
 def common_str_origin(str_a, str_b):
 
     for c, s in enumerate(zip(str_a, str_b)):

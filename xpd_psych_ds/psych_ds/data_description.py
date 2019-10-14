@@ -1,6 +1,5 @@
+from . import PSYCH_DS_VERSION
 from .thing import Thing
-
-PSYCH_DS_VERSION = "0.1.0"
 
 class DataSet(Thing):
 
@@ -30,7 +29,7 @@ class Variable(Thing):
 
         self.add_required("name", name)
         self.add_recommended("description", "")
-        self.add_recommended("levels", "")
+        self.add_recommended("levels", [])
 
 
 class Person(Thing):
@@ -47,3 +46,20 @@ class LevelDescription(Thing):
 
         self.add_required("codeValue", name)
         self.add_required("description", description)
+
+
+"""
+optional data_set
+
+{
+  "creator": [
+  {
+	"@type": "Person",
+     "name": ""
+  }
+  ],
+  "citation" : "",
+  "funder" : [""],
+  "url" : [""]
+}
+"""

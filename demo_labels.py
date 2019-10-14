@@ -1,4 +1,4 @@
-from xpd_psych_ds import psych_ds_data_description as ds
+from xpd_psych_ds import psych_ds as ds
 
 d = ds.DataSet(name="Dataset Demo")
 
